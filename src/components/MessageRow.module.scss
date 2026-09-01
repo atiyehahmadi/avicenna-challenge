@@ -1,0 +1,142 @@
+@use 'sass:map';
+@use '../styles/tokens' as *;
+@use '../styles/mixins' as *;
+@use './grid' as *;
+
+.row {
+  @include row-grid;
+
+  align-items: center;
+  border-bottom: 1px solid var(--color-border);
+
+  &:hover {
+    background: var(--color-row-hover);
+  }
+}
+
+.rowSelected {
+  background: var(--color-row-selected);
+}
+
+.cellSelect,
+.cellSubject,
+.cellRecipient,
+.cellDate,
+.cellStatus {
+  display: flex;
+  align-items: center;
+  gap: space('2');
+  min-width: 0; // lets truncation work inside a grid track
+  padding: space('2') space('3');
+}
+
+.checkbox {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--color-accent);
+  @include focus-ring(1px);
+}
+
+.expandButton {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  padding: space('1') 0;
+  text-align: left;
+  background: none;
+  border: 0;
+  border-radius: radius('sm');
+  @include focus-ring(1px);
+}
+
+.subject {
+  display: block;
+  font-weight: 550;
+  @include truncate;
+}
+
+.recipient,
+.cellDate {
+  color: var(--color-text-muted);
+  font-size: font-size('sm');
+  @include truncate;
+}
+
+.cellStatus {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: space('1');
+}
+
+.chip {
+  display: inline-block;
+  padding: 0 space('2');
+  font-size: font-size('xs');
+  font-weight: 600;
+  line-height: 1.6;
+  white-space: nowrap;
+  border: 1px solid;
+  border-radius: 999px;
+}
+
+// The payoff for authoring statuses as a Sass map: one loop generates every
+// chip variant, so adding a status is a single line in _tokens.scss.
+@each $name, $colors in $statuses {
+  .chip-#{$name} {
+    color: var(--status-#{$name}-fg);
+    background: var(--status-#{$name}-bg);
+    border-color: var(--status-#{$name}-border);
+  }
+}
+
+.errorText {
+  font-size: font-size('xs');
+  color: var(--status-failed-fg);
+  @include truncate;
+  max-width: 100%;
+}
+
+.detailRow {
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-row-hover);
+}
+
+.detailCell {
+  display: block;
+  padding: space('3') space('4') space('4');
+}
+
+.detailList {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: space('1') space('3');
+  margin: 0 0 space('3');
+  font-size: font-size('sm');
+}
+
+.detailTerm {
+  color: var(--color-text-muted);
+  font-weight: 550;
+}
+
+.detailValue {
+  margin: 0;
+  min-width: 0;
+  @include safe-wrap;
+}
+
+.body {
+  margin: 0;
+  padding: space('3');
+  max-height: 18rem;
+  overflow-y: auto;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: radius('md');
+  font-size: font-size('sm');
+
+  // The two declarations that make untrusted content safe to lay out: newlines
+  // are preserved without interpreting markup, and an unbroken 50k-character
+  // string wraps instead of blowing out the page.
+  @include safe-wrap;
+}

@@ -1,0 +1,19 @@
+// Shared column definition for the message grid.
+//
+// The header row and every message row must agree on their tracks. Defining
+// that once here means they cannot drift apart, and it stays a plain Sass
+// partial (not a CSS module) because it emits no classes of its own.
+//
+// minmax(0, …) on the flexible tracks is what allows text truncation inside
+// them: without it a grid track refuses to shrink below its content's min-width
+// and long subjects push the layout sideways instead of ellipsising.
+
+@mixin row-grid {
+  display: grid;
+  grid-template-columns:
+    2.5rem
+    minmax(0, 2fr)
+    minmax(0, 1fr)
+    minmax(0, 8rem)
+    minmax(0, 9rem);
+}

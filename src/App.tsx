@@ -1,5 +1,6 @@
 import { OutboxProvider, useOutboxState } from './state/OutboxContext';
 import { ComposeForm } from './components/ComposeForm';
+import { MessageList } from './components/MessageList';
 import styles from './App.module.scss';
 
 function OutboxShell() {
@@ -17,6 +18,7 @@ function OutboxShell() {
       </header>
 
       <ComposeForm />
+      <MessageList />
     </main>
   );
 }
