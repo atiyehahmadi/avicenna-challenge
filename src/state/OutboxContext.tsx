@@ -1,16 +1,20 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useMemo,
   useReducer,
+  useRef,
   type ReactNode,
 } from 'react';
 import {
   createMessage,
   initialOutboxState,
   outboxReducer,
+  type OutboxAction,
   type OutboxState,
 } from './outboxReducer';
+import { useDispatcher } from '../dispatch/useDispatcher';
 
 /**
  * State and actions are two separate contexts on purpose.
@@ -41,19 +45,44 @@ export interface OutboxActions {
   clearSelection: () => void;
   setFocus: (id: string | null) => void;
   toggleExpand: (id: string) => void;
+  /** Dispatches every selected pending message. See dispatch/useDispatcher.ts. */
+  sendSelected: () => void;
 }
 
 const OutboxStateContext = createContext<OutboxState | null>(null);
 const OutboxActionsContext = createContext<OutboxActions | null>(null);
 
 export function OutboxProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(outboxReducer, initialOutboxState);
+  const [state, rawDispatch] = useReducer(outboxReducer, initialOutboxState);
 
-  // `dispatch` from useReducer is referentially stable for the life of the
-  // component, so an empty dependency list is correct here: this object is
-  // created once and every consumer keeps the same reference forever.
+  /**
+   * A synchronous mirror of state, for the async layer.
+   *
+   * React state is asynchronous: after dispatching, `state` in the current
+   * closure is still the old value. The scheduler cannot live with that — it
+   * reads state between awaits to decide whether a queued message is still
+   * eligible to send, and acting on a stale read means sending something the
+   * user just deleted.
+   *
+   * So every dispatch also applies the same pure reducer to the mirror. The
+   * reducer is pure, so applying it here and inside React produces identical
+   * results; this is exactly why the reducer was kept free of side effects.
+   */
+  const latest = useRef(state);
+
+  const dispatch = useCallback((action: OutboxAction) => {
+    latest.current = outboxReducer(latest.current, action);
+    rawDispatch(action);
+  }, []);
+
+  const dispatcher = useDispatcher(latest, dispatch);
+
+  // `dispatch` and `dispatcher` are both stable for the life of the component,
+  // so an empty dependency list is correct here: this object is created once
+  // and every consumer keeps the same reference forever.
   const actions = useMemo<OutboxActions>(
     () => ({
+      sendSelected: dispatcher.sendSelected,
       addMessage: (draft) =>
         dispatch({ type: 'ADD_MESSAGE', message: createMessage(draft) }),
       deleteMessage: (id) => dispatch({ type: 'DELETE_MESSAGE', id }),

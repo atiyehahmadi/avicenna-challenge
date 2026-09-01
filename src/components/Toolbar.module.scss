@@ -1,0 +1,57 @@
+@use '../styles/tokens' as *;
+@use '../styles/mixins' as *;
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: space('4');
+  flex-wrap: wrap;
+  padding: space('3') 0;
+}
+
+.selectAll {
+  display: inline-flex;
+  align-items: center;
+  gap: space('2');
+  font-size: font-size('sm');
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.checkbox {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--color-accent);
+  @include focus-ring(1px);
+}
+
+.summary {
+  margin: 0;
+  margin-inline-start: auto;
+  font-size: font-size('sm');
+  font-variant-numeric: tabular-nums;
+}
+
+.note {
+  color: var(--color-text-muted);
+}
+
+.send {
+  padding: space('2') space('4');
+  font-weight: 550;
+  color: var(--color-accent-text);
+  background: var(--color-accent);
+  border: 1px solid transparent;
+  border-radius: radius('md');
+
+  @include focus-ring;
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.08);
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
