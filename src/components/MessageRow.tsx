@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import type { Message } from '../types/message';
 import {
   formatAbsoluteTime,
@@ -39,6 +40,10 @@ export interface MessageRowProps {
   onCancel: (id: string) => void;
   onRemoveFromQueue: (id: string) => void;
   onRetry: (id: string) => void;
+  /** True for the single row that currently holds the roving tabindex. */
+  focused: boolean;
+  registerRow: (id: string, el: HTMLElement | null) => void;
+  onFocusRow: (id: string) => void;
 }
 
 export function MessageRow({
@@ -50,6 +55,9 @@ export function MessageRow({
   onCancel,
   onRemoveFromQueue,
   onRetry,
+  focused,
+  registerRow,
+  onFocusRow,
 }: MessageRowProps) {
   const { id, subject, recipient, body, createdAt, status, queued, error } =
     message;
@@ -59,12 +67,27 @@ export function MessageRow({
   const display = queued && status === 'pending' ? 'queued' : status;
   const detailId = `detail-${id}`;
 
+  // A per-row stable ref callback. Passing an inline arrow instead would give
+  // React a new function every render, making it detach and reattach the ref
+  // each time — noisy, and it would fight the memoisation added later.
+  const setRowRef = useCallback(
+    (el: HTMLElement | null) => registerRow(id, el),
+    [id, registerRow],
+  );
+
   return (
     <>
       <div
         role="row"
         data-message-id={id}
         data-status={display}
+        ref={setRowRef}
+        // Roving tabindex: exactly one row is in the tab order, so the whole
+        // list is a single Tab stop and arrow keys move within it.
+        tabIndex={focused ? 0 : -1}
+        // Clicking or shift-tabbing onto a row makes it the focused one, so
+        // keyboard and pointer never disagree about where the cursor is.
+        onFocus={() => onFocusRow(id)}
         className={`${styles.row} ${selected ? styles.rowSelected : ''}`}
       >
         <span role="gridcell" className={styles.cellSelect}>
