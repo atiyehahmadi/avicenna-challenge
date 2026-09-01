@@ -31,6 +31,7 @@ export function MessageList() {
     removeFromQueue,
     retry,
     setFocus,
+    deleteMessage,
   } = useOutboxActions();
 
   const { registerRow, requestFocus } = useRovingFocus(focusedId);
@@ -46,6 +47,18 @@ export function MessageList() {
     if (!toId) return;
     setFocus(toId);
     requestFocus();
+  }
+
+  /**
+   * Deleting destroys the focused DOM node, so focus would otherwise fall back
+   * to <body> and keyboard navigation would be lost. The reducer picks the
+   * successor from the pre-removal order — the next row, or the previous one
+   * when the deleted row was last — and requestFocus moves the browser to it
+   * once the new list has committed.
+   */
+  function handleDelete(id: string) {
+    requestFocus();
+    deleteMessage(id);
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
@@ -86,6 +99,10 @@ export function MessageList() {
       case 'Enter':
         event.preventDefault();
         toggleExpand(id);
+        break;
+      case 'Delete':
+        event.preventDefault();
+        handleDelete(id);
         break;
       default:
         break;
@@ -145,6 +162,7 @@ export function MessageList() {
             onCancel={cancel}
             onRemoveFromQueue={removeFromQueue}
             onRetry={retry}
+            onDelete={handleDelete}
           />
         ))}
       </div>

@@ -40,6 +40,7 @@ export interface MessageRowProps {
   onCancel: (id: string) => void;
   onRemoveFromQueue: (id: string) => void;
   onRetry: (id: string) => void;
+  onDelete: (id: string) => void;
   /** True for the single row that currently holds the roving tabindex. */
   focused: boolean;
   registerRow: (id: string, el: HTMLElement | null) => void;
@@ -55,6 +56,7 @@ export function MessageRow({
   onCancel,
   onRemoveFromQueue,
   onRetry,
+  onDelete,
   focused,
   registerRow,
   onFocusRow,
@@ -170,6 +172,23 @@ export function MessageRow({
               Retry
             </button>
           )}
+          {/*
+            Deliberately absent while sending or queued: those rows already
+            offer Cancel or Remove, and discarding a message mid-flight without
+            first deciding what to do about the in-flight request would leave
+            the user unsure whether it was actually sent.
+          */}
+          {(status === 'pending' || status === 'delivered' || status === 'failed') &&
+            display !== 'queued' && (
+              <button
+                type="button"
+                className={styles.action}
+                onClick={() => onDelete(id)}
+                aria-label={`Delete message: ${subject}`}
+              >
+                Delete
+              </button>
+            )}
         </span>
       </div>
 
