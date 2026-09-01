@@ -1,0 +1,93 @@
+// Global reset, theme custom properties, and base typography.
+//
+// Tokens are authored as Sass maps (_tokens.scss) but emitted here as CSS custom
+// properties. That split is deliberate: Sass gives compile-time structure (the
+// $statuses map drives generated modifiers), while custom properties keep the
+// values swappable at runtime for the dark scheme below.
+
+@use 'sass:map';
+@use 'tokens' as *;
+
+:root {
+  --color-bg: #f8fafc;
+  --color-surface: #ffffff;
+  --color-text: #0f172a;
+  --color-text-muted: #64748b;
+  --color-border: #e2e8f0;
+  --color-border-strong: #cbd5e1;
+  --color-focus: #2563eb;
+  --color-accent: #2563eb;
+  --color-accent-text: #ffffff;
+  --color-row-hover: #f8fafc;
+  --color-row-selected: #eff6ff;
+
+  // Emit every status triple as custom properties, so component styles can
+  // reference --status-<name>-<role> without importing the map.
+  @each $name, $colors in $statuses {
+    --status-#{$name}-fg: #{map.get($colors, 'fg')};
+    --status-#{$name}-bg: #{map.get($colors, 'bg')};
+    --status-#{$name}-border: #{map.get($colors, 'border')};
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #0b1120;
+    --color-surface: #111827;
+    --color-text: #e5e7eb;
+    --color-text-muted: #94a3b8;
+    --color-border: #1f2937;
+    --color-border-strong: #334155;
+    --color-focus: #60a5fa;
+    --color-accent: #3b82f6;
+    --color-accent-text: #ffffff;
+    --color-row-hover: #0f172a;
+    --color-row-selected: #172554;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  // Arrow keys move focus between rows; without this, each move animates.
+  scroll-behavior: auto;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  font-size: font-size('md');
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  line-height: 1.25;
+}
+
+// Inputs and buttons do not inherit typography by default.
+input,
+textarea,
+button,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}

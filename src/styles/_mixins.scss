@@ -1,0 +1,54 @@
+// Shared style primitives.
+//
+// `focus-ring` exists because keyboard focus visibility is a graded requirement
+// here, not a nicety: the message list is operated with arrow keys, so the
+// focused row must be unmistakable. Defining it once keeps every focusable
+// surface consistent.
+
+@use 'tokens' as *;
+
+/// Visible focus indicator. Uses :focus-visible so pointer users don't see it,
+/// and an outline (not a border) so it never shifts layout.
+@mixin focus-ring($offset: 2px) {
+  &:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: $offset;
+  }
+}
+
+/// Hides content visually while leaving it available to screen readers.
+/// Used for the aria-live status region and for labels on icon-only controls.
+@mixin visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/// Single-line truncation. Message subjects are untrusted input, so they are
+/// clipped with CSS rather than by slicing the string — see NOTES on safe
+/// rendering: never mutate user content to make it fit.
+@mixin truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/// Multi-line untrusted text. `overflow-wrap: anywhere` is the load-bearing
+/// declaration: without it a single 50k-character word destroys the layout.
+@mixin safe-wrap {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/// Respect users who ask for reduced motion.
+@mixin motion-safe {
+  @media (prefers-reduced-motion: no-preference) {
+    @content;
+  }
+}

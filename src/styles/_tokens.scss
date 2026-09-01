@@ -1,0 +1,82 @@
+// Design tokens.
+//
+// SCSS maps are the authoring source; they are emitted as CSS custom properties
+// so that theming stays possible at runtime (see the dark-scheme block in
+// global.scss) while component styles keep authoring in Sass.
+//
+// `$statuses` is the one that earns its keep: the status chip modifiers in
+// MessageRow are generated from it with @each, so adding a status is a single
+// line here rather than four parallel rule blocks.
+
+@use 'sass:map';
+
+$space: (
+  '0': 0,
+  '1': 0.25rem,
+  '2': 0.5rem,
+  '3': 0.75rem,
+  '4': 1rem,
+  '5': 1.5rem,
+  '6': 2rem,
+);
+
+$radius: (
+  'sm': 4px,
+  'md': 8px,
+  'lg': 12px,
+);
+
+$font-size: (
+  'xs': 0.75rem,
+  'sm': 0.8125rem,
+  'md': 0.875rem,
+  'lg': 1rem,
+  'xl': 1.375rem,
+);
+
+// One entry per MessageStatus in src/types/message.ts, plus `queued`, which is a
+// display-only flag rather than a status (see NOTES: the state machine has no
+// queued state, so it must not become one).
+$statuses: (
+  'pending': (
+    'fg': #475569,
+    'bg': #f1f5f9,
+    'border': #cbd5e1,
+  ),
+  'queued': (
+    'fg': #7c5e10,
+    'bg': #fef9c3,
+    'border': #fde68a,
+  ),
+  'sending': (
+    'fg': #1d4ed8,
+    'bg': #dbeafe,
+    'border': #bfdbfe,
+  ),
+  'delivered': (
+    'fg': #15803d,
+    'bg': #dcfce7,
+    'border': #bbf7d0,
+  ),
+  'failed': (
+    'fg': #b91c1c,
+    'bg': #fee2e2,
+    'border': #fecaca,
+  ),
+);
+
+@function space($key) {
+  @return map.get($space, $key);
+}
+
+@function radius($key) {
+  @return map.get($radius, $key);
+}
+
+@function font-size($key) {
+  @return map.get($font-size, $key);
+}
+
+@function status-color($status, $role) {
+  @return map.get(map.get($statuses, $status), $role);
+}
