@@ -51,6 +51,8 @@ export interface OutboxActions {
   cancel: (id: string) => void;
   /** Withdraws a queued message before it starts. */
   removeFromQueue: (id: string) => void;
+  /** Re-sends a single failed message without disturbing any other. */
+  retry: (id: string) => void;
 }
 
 const OutboxStateContext = createContext<OutboxState | null>(null);
@@ -89,6 +91,7 @@ export function OutboxProvider({ children }: { children: ReactNode }) {
       sendSelected: dispatcher.sendSelected,
       cancel: dispatcher.cancel,
       removeFromQueue: dispatcher.removeFromQueue,
+      retry: dispatcher.retry,
       addMessage: (draft) =>
         dispatch({ type: 'ADD_MESSAGE', message: createMessage(draft) }),
       deleteMessage: (id) => dispatch({ type: 'DELETE_MESSAGE', id }),

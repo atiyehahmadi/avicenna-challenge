@@ -112,6 +112,11 @@
   }
 }
 
+.actionRetry {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
 .errorText {
   font-size: font-size('xs');
   color: var(--status-failed-fg);

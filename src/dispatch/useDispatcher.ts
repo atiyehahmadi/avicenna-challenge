@@ -34,6 +34,8 @@ export interface DispatcherApi {
   cancel: (id: string) => void;
   /** Pulls a still-queued message out of its recipient queue before it starts. */
   removeFromQueue: (id: string) => void;
+  /** Re-sends a single failed message without disturbing any other. */
+  retry: (id: string) => void;
 }
 
 /**
@@ -239,7 +241,30 @@ export function createDispatcher(
     dispatch({ type: 'DEQUEUED_TO_PENDING', ids: [id] });
   }
 
-  return { sendSelected, cancel, removeFromQueue };
+  /**
+   * Retry one failed message.
+   *
+   * This deliberately goes through the same enqueue-and-pump path as a bulk
+   * send rather than calling runOne directly. Two things fall out of that.
+   *
+   * Retrying into a busy recipient still serialises correctly: the message
+   * joins that recipient's queue and waits its turn, so a retry can never
+   * overtake a send already in flight to the same person. And the brief's
+   * requirement that retrying one message must not affect others holds by
+   * construction — nothing else is touched, and the message gets a fresh
+   * AbortController and a fresh attempt token because runOne mints both.
+   */
+  function retry(id: string): void {
+    const message = getState().byId[id];
+    if (!message || message.status !== 'failed') return;
+
+    // Clears the error and marks it queued, exactly as a bulk send would.
+    dispatch({ type: 'ENQUEUED', ids: [id] });
+    getQueue(message.recipient).ids.push(id);
+    void pump(message.recipient);
+  }
+
+  return { sendSelected, cancel, removeFromQueue, retry };
 }
 
 /** React wrapper. Every dependency is stable, so the scheduler is built once. */

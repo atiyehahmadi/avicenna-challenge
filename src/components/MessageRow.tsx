@@ -38,6 +38,7 @@ export interface MessageRowProps {
   onToggleExpand: (id: string) => void;
   onCancel: (id: string) => void;
   onRemoveFromQueue: (id: string) => void;
+  onRetry: (id: string) => void;
 }
 
 export function MessageRow({
@@ -48,6 +49,7 @@ export function MessageRow({
   onToggleExpand,
   onCancel,
   onRemoveFromQueue,
+  onRetry,
 }: MessageRowProps) {
   const { id, subject, recipient, body, createdAt, status, queued, error } =
     message;
@@ -133,6 +135,16 @@ export function MessageRow({
               aria-label={`Remove from queue: ${subject}`}
             >
               Remove
+            </button>
+          )}
+          {status === 'failed' && (
+            <button
+              type="button"
+              className={`${styles.action} ${styles.actionRetry}`}
+              onClick={() => onRetry(id)}
+              aria-label={`Retry sending: ${subject}`}
+            >
+              Retry
             </button>
           )}
         </span>

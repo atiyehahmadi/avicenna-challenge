@@ -22,7 +22,7 @@ import styles from './MessageList.module.scss';
 
 export function MessageList() {
   const { byId, order, selectedIds, expandedId } = useOutboxState();
-  const { toggleSelect, toggleExpand, cancel, removeFromQueue } =
+  const { toggleSelect, toggleExpand, cancel, removeFromQueue, retry } =
     useOutboxActions();
 
   if (order.length === 0) {
@@ -73,6 +73,7 @@ export function MessageList() {
             onToggleExpand={toggleExpand}
             onCancel={cancel}
             onRemoveFromQueue={removeFromQueue}
+            onRetry={retry}
           />
         ))}
       </div>
