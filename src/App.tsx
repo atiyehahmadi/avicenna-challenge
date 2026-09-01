@@ -2,6 +2,8 @@ import { OutboxProvider, useOutboxState } from './state/OutboxContext';
 import { ComposeForm } from './components/ComposeForm';
 import { MessageList } from './components/MessageList';
 import { Toolbar } from './components/Toolbar';
+import { StatusAnnouncer } from './components/StatusAnnouncer';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import styles from './App.module.scss';
 
 function OutboxShell() {
@@ -19,6 +21,7 @@ function OutboxShell() {
       </header>
 
       <ComposeForm />
+      <StatusAnnouncer />
       <Toolbar />
       <MessageList />
     </main>
@@ -27,8 +30,10 @@ function OutboxShell() {
 
 export default function App() {
   return (
-    <OutboxProvider>
-      <OutboxShell />
-    </OutboxProvider>
+    <ErrorBoundary>
+      <OutboxProvider>
+        <OutboxShell />
+      </OutboxProvider>
+    </ErrorBoundary>
   );
 }

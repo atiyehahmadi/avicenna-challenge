@@ -20,6 +20,18 @@ import type { Message } from '../types/message';
  *    cancellation must dispatch BEFORE it aborts, or the token is never bumped.
  */
 
+/**
+ * Explains why messages went back to `pending` without being sent, so the UI
+ * can say so rather than leaving a silently-pending row indistinguishable from
+ * one that was never dispatched. `seq` increments on every halt so that two
+ * identical halts still register as distinct events.
+ */
+export interface HaltNotice {
+  recipient: string;
+  count: number;
+  seq: number;
+}
+
 export interface OutboxState {
   /** Messages by id. O(1) lookup, which every async completion needs. */
   byId: Record<string, Message>;
@@ -31,6 +43,15 @@ export interface OutboxState {
   focusedId: string | null;
   /** Row whose detail view is expanded, if any. */
   expandedId: string | null;
+  /** Most recent halt, for the status announcement and banner. */
+  notice: HaltNotice | null;
+  /**
+   * Monotonic counter behind HaltNotice.seq. It lives separately from `notice`
+   * precisely so that clearing the notice does not reset it: if the sequence
+   * restarted, a second halt could reproduce a seq the announcer had already
+   * seen and the announcement would be silently skipped.
+   */
+  noticeSeq: number;
 }
 
 export type OutboxAction =
@@ -42,7 +63,12 @@ export type OutboxAction =
   | { type: 'SET_FOCUS'; id: string | null }
   | { type: 'TOGGLE_EXPAND'; id: string }
   | { type: 'ENQUEUED'; ids: string[] }
-  | { type: 'DEQUEUED_TO_PENDING'; ids: string[] }
+  | {
+      type: 'DEQUEUED_TO_PENDING';
+      ids: string[];
+      /** 'halted' means a sibling failed; 'withdrawn' means the user removed it. */
+      reason?: 'halted' | 'withdrawn';
+    }
   | { type: 'SEND_STARTED'; id: string; attempt: number }
   | { type: 'SEND_SUCCEEDED'; id: string; attempt: number }
   | { type: 'SEND_FAILED'; id: string; attempt: number; error: string }
@@ -54,6 +80,8 @@ export const initialOutboxState: OutboxState = {
   selectedIds: new Set(),
   focusedId: null,
   expandedId: null,
+  notice: null,
+  noticeSeq: 0,
 };
 
 /** Creates a message. Impure (id + clock), so it lives outside the reducer. */
@@ -183,17 +211,33 @@ export function outboxReducer(
           error: undefined,
         });
       }
-      return next;
+      // A new batch supersedes any explanation left over from the previous one.
+      return next === state ? state : { ...next, notice: null };
     }
 
     case 'DEQUEUED_TO_PENDING': {
       // Left the queue without ever being sent: either the group halted after a
       // sibling failed, or the user pulled this one out of the queue.
       let next = state;
+      const dequeued: string[] = [];
       for (const id of action.ids) {
         const m = next.byId[id];
         if (!m || !m.queued) continue;
+        dequeued.push(id);
         next = setMessage(next, id, { status: 'pending', queued: false });
+      }
+
+      if (action.reason === 'halted' && dequeued.length > 0) {
+        const seq = state.noticeSeq + 1;
+        next = {
+          ...next,
+          noticeSeq: seq,
+          notice: {
+            recipient: next.byId[dequeued[0]].recipient,
+            count: dequeued.length,
+            seq,
+          },
+        };
       }
       return next;
     }

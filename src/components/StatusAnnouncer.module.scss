@@ -1,0 +1,16 @@
+@use '../styles/tokens' as *;
+@use '../styles/mixins' as *;
+
+.srOnly {
+  @include visually-hidden;
+}
+
+.banner {
+  margin: 0 0 space('3');
+  padding: space('3') space('4');
+  font-size: font-size('sm');
+  color: var(--status-failed-fg);
+  background: var(--status-failed-bg);
+  border: 1px solid var(--status-failed-border);
+  border-radius: radius('md');
+}

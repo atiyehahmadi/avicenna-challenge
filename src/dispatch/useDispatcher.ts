@@ -72,7 +72,7 @@ export function createDispatcher(
     q.ids.length = 0;
     q.head = 0;
     if (remaining.length > 0) {
-      dispatch({ type: 'DEQUEUED_TO_PENDING', ids: remaining });
+      dispatch({ type: 'DEQUEUED_TO_PENDING', ids: remaining, reason: 'halted' });
     }
   }
 
@@ -238,7 +238,7 @@ export function createDispatcher(
       if (index >= 0) q.ids.splice(index, 1);
     }
 
-    dispatch({ type: 'DEQUEUED_TO_PENDING', ids: [id] });
+    dispatch({ type: 'DEQUEUED_TO_PENDING', ids: [id], reason: 'withdrawn' });
   }
 
   /**
