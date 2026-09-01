@@ -14,7 +14,7 @@ import {
   type OutboxAction,
   type OutboxState,
 } from './outboxReducer';
-import { useDispatcher } from '../dispatch/useDispatcher';
+import { useDispatcher, type SendFn } from '../dispatch/useDispatcher';
 
 /**
  * State and actions are two separate contexts on purpose.
@@ -58,7 +58,16 @@ export interface OutboxActions {
 const OutboxStateContext = createContext<OutboxState | null>(null);
 const OutboxActionsContext = createContext<OutboxActions | null>(null);
 
-export function OutboxProvider({ children }: { children: ReactNode }) {
+export function OutboxProvider({
+  children,
+  // Same seam as createDispatcher: the async boundary owns time, randomness and
+  // the network, so it is the one thing worth being able to substitute. The app
+  // never passes this; the tests supply a sender they can settle on demand.
+  send,
+}: {
+  children: ReactNode;
+  send?: SendFn;
+}) {
   const [state, rawDispatch] = useReducer(outboxReducer, initialOutboxState);
 
   /**
@@ -81,7 +90,7 @@ export function OutboxProvider({ children }: { children: ReactNode }) {
     rawDispatch(action);
   }, []);
 
-  const dispatcher = useDispatcher(latest, dispatch);
+  const dispatcher = useDispatcher(latest, dispatch, send);
 
   // `dispatch` and `dispatcher` are both stable for the life of the component,
   // so an empty dependency list is correct here: this object is created once
