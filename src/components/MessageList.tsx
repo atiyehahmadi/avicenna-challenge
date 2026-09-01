@@ -1,4 +1,4 @@
-import type { KeyboardEvent } from 'react';
+import { useCallback, type KeyboardEvent } from 'react';
 import { useOutboxActions, useOutboxState } from '../state/OutboxContext';
 import { useRovingFocus } from '../hooks/useRovingFocus';
 import { MessageRow } from './MessageRow';
@@ -55,11 +55,19 @@ export function MessageList() {
    * successor from the pre-removal order — the next row, or the previous one
    * when the deleted row was last — and requestFocus moves the browser to it
    * once the new list has committed.
+   *
+   * Memoised because it is passed to every row. An inline function would get a
+   * new identity on each render, which alone would defeat React.memo on
+   * MessageRow and undo the whole point of memoising it. Both dependencies are
+   * themselves stable, so this is created once.
    */
-  function handleDelete(id: string) {
-    requestFocus();
-    deleteMessage(id);
-  }
+  const handleDelete = useCallback(
+    (id: string) => {
+      requestFocus();
+      deleteMessage(id);
+    },
+    [requestFocus, deleteMessage],
+  );
 
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     const target = event.target as HTMLElement;

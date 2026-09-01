@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { memo, useCallback } from 'react';
 import type { Message } from '../types/message';
 import {
   formatAbsoluteTime,
@@ -47,7 +47,7 @@ export interface MessageRowProps {
   onFocusRow: (id: string) => void;
 }
 
-export function MessageRow({
+function MessageRowImpl({
   message,
   selected,
   expanded,
@@ -212,3 +212,19 @@ export function MessageRow({
     </>
   );
 }
+
+/**
+ * Memoised, which is what keeps a bulk dispatch cheap.
+ *
+ * Every prop is either a primitive or a referentially stable function: the
+ * action callbacks come from the actions context, which is built once;
+ * registerRow is memoised in useRovingFocus; and handleDelete is memoised in
+ * MessageList. The message object itself is stable because the reducer
+ * replaces only the message that changed and leaves the rest identical.
+ *
+ * The result is that one message changing status re-renders one row rather
+ * than all of them. Without the structural sharing in the reducer this memo
+ * would be decorative — the shallow compare would fail on `message` every
+ * time — which is why the two go together.
+ */
+export const MessageRow = memo(MessageRowImpl);
