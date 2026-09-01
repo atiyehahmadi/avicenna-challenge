@@ -1,4 +1,5 @@
 import { OutboxProvider, useOutboxState } from './state/OutboxContext';
+import { ComposeForm } from './components/ComposeForm';
 import styles from './App.module.scss';
 
 function OutboxShell() {
@@ -14,6 +15,8 @@ function OutboxShell() {
             : `${order.length} message${order.length === 1 ? '' : 's'}`}
         </p>
       </header>
+
+      <ComposeForm />
     </main>
   );
 }
