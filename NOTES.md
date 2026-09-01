@@ -239,9 +239,10 @@ async, and a reducer gives exactly one chokepoint where a stale result can be re
 
 ## Reading the history
 
-The commits are in two blocks. Commits 1–12 are the brief, in the order the reasoning happened.
-Commits 13–14 are the tests, kept separate and last because they were not asked for and should be
-easy to consider on their own.
+The commits fall into two blocks. Everything up to and including `feat: announce halts and failures`
+is the brief itself, in the order the reasoning actually happened — scheduler, then cancellation,
+then retry, then keyboard and focus. The `test:` commits come after it, kept separate and last
+because tests were not part of the brief and should be easy to consider, or ignore, on their own.
 
 If you read one thing, make it `cancel()` in `src/dispatch/useDispatcher.ts`. The comment above it
 explains the abort-versus-resolve race, which is the least obvious thing in the codebase and the
