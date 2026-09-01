@@ -47,6 +47,10 @@ export interface OutboxActions {
   toggleExpand: (id: string) => void;
   /** Dispatches every selected pending message. See dispatch/useDispatcher.ts. */
   sendSelected: () => void;
+  /** Aborts an in-flight send and returns that message to pending. */
+  cancel: (id: string) => void;
+  /** Withdraws a queued message before it starts. */
+  removeFromQueue: (id: string) => void;
 }
 
 const OutboxStateContext = createContext<OutboxState | null>(null);
@@ -83,6 +87,8 @@ export function OutboxProvider({ children }: { children: ReactNode }) {
   const actions = useMemo<OutboxActions>(
     () => ({
       sendSelected: dispatcher.sendSelected,
+      cancel: dispatcher.cancel,
+      removeFromQueue: dispatcher.removeFromQueue,
       addMessage: (draft) =>
         dispatch({ type: 'ADD_MESSAGE', message: createMessage(draft) }),
       deleteMessage: (id) => dispatch({ type: 'DELETE_MESSAGE', id }),

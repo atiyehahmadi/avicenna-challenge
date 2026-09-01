@@ -11,9 +11,10 @@
 @mixin row-grid {
   display: grid;
   grid-template-columns:
-    2.5rem
-    minmax(0, 2fr)
-    minmax(0, 1fr)
-    minmax(0, 8rem)
-    minmax(0, 9rem);
+    2.5rem // select
+    minmax(0, 2fr) // subject
+    minmax(0, 1fr) // recipient
+    minmax(0, 8rem) // created
+    minmax(0, 9rem) // status
+    minmax(0, 7rem); // actions
 }

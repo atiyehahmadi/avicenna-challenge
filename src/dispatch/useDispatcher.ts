@@ -30,6 +30,10 @@ interface RecipientQueue {
 
 export interface DispatcherApi {
   sendSelected: () => void;
+  /** Aborts an in-flight send and returns that message to `pending`. */
+  cancel: (id: string) => void;
+  /** Pulls a still-queued message out of its recipient queue before it starts. */
+  removeFromQueue: (id: string) => void;
 }
 
 /**
@@ -176,7 +180,66 @@ export function createDispatcher(
     for (const recipient of recipients) void pump(recipient);
   }
 
-  return { sendSelected };
+  /**
+   * Cancel an in-flight send.
+   *
+   * The ORDER of the two statements below is the whole point, and it is not
+   * interchangeable.
+   *
+   * AbortSignal alone does not make cancellation correct here, because an abort
+   * can lose. Look at settle() in src/api/messageApi.ts: when the request
+   * resolves it clears its timer AND removes the abort listener. An abort
+   * arriving after that is a silent no-op — nothing throws, no AbortError is
+   * ever raised, and runOne's catch block never runs. If the state change were
+   * left to that catch block, the message's attempt token would never be
+   * bumped, the already-resolved SEND_SUCCEEDED would arrive carrying a token
+   * the reducer still considers current, and a message the user had just
+   * cancelled would be marked delivered.
+   *
+   * Dispatching first closes that hole. SEND_CANCELLED bumps the attempt, which
+   * supersedes the in-flight request immediately, so whether or not the abort
+   * lands the resolved result fails the reducer's isCurrent() guard and is
+   * discarded. The abort is then best-effort cleanup: it frees the request when
+   * it wins, and costs nothing when it loses.
+   *
+   * The rule this generalises to: whoever initiates a cancellation owns the
+   * state transition. The async layer's AbortError branch is control flow only
+   * — it decides whether the queue advances, not what the message becomes.
+   */
+  function cancel(id: string): void {
+    const message = getState().byId[id];
+    // The brief scopes Cancel to messages that are sending.
+    if (!message || message.status !== 'sending') return;
+
+    dispatch({ type: 'SEND_CANCELLED', id, attempt: message.attempt });
+    aborters.get(id)?.abort();
+  }
+
+  /**
+   * Withdraw a message that is queued but has not started.
+   *
+   * A queued row is not `sending`, so per the brief it is not what Cancel
+   * covers; it gets its own control rather than overloading that label. The
+   * rest of the chain carries on — the withdrawn message has simply left the
+   * batch, so the remaining messages are still correctly ordered among
+   * themselves.
+   */
+  function removeFromQueue(id: string): void {
+    const message = getState().byId[id];
+    if (!message || !message.queued) return;
+
+    const q = queues.get(message.recipient);
+    if (q) {
+      // Search from the cursor: entries before it have already been consumed,
+      // and splicing at or after head leaves the cursor valid.
+      const index = q.ids.indexOf(id, q.head);
+      if (index >= 0) q.ids.splice(index, 1);
+    }
+
+    dispatch({ type: 'DEQUEUED_TO_PENDING', ids: [id] });
+  }
+
+  return { sendSelected, cancel, removeFromQueue };
 }
 
 /** React wrapper. Every dependency is stable, so the scheduler is built once. */

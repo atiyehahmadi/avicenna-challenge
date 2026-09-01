@@ -22,7 +22,8 @@
 .cellSubject,
 .cellRecipient,
 .cellDate,
-.cellStatus {
+.cellStatus,
+.cellActions {
   display: flex;
   align-items: center;
   gap: space('2');
@@ -86,6 +87,28 @@
     color: var(--status-#{$name}-fg);
     background: var(--status-#{$name}-bg);
     border-color: var(--status-#{$name}-border);
+  }
+}
+
+.cellActions {
+  justify-content: flex-end;
+}
+
+.action {
+  padding: space('1') space('3');
+  font-size: font-size('xs');
+  font-weight: 550;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: radius('sm');
+  white-space: nowrap;
+
+  @include focus-ring(1px);
+
+  &:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
   }
 }
 

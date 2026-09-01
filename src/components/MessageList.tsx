@@ -22,7 +22,8 @@ import styles from './MessageList.module.scss';
 
 export function MessageList() {
   const { byId, order, selectedIds, expandedId } = useOutboxState();
-  const { toggleSelect, toggleExpand } = useOutboxActions();
+  const { toggleSelect, toggleExpand, cancel, removeFromQueue } =
+    useOutboxActions();
 
   if (order.length === 0) {
     return (
@@ -57,6 +58,9 @@ export function MessageList() {
           <span role="columnheader" className={styles.headerCell}>
             Status
           </span>
+          <span role="columnheader" className={styles.headerCell}>
+            <span className={styles.srOnly}>Actions</span>
+          </span>
         </div>
 
         {order.map((id) => (
@@ -67,6 +71,8 @@ export function MessageList() {
             expanded={expandedId === id}
             onToggleSelect={toggleSelect}
             onToggleExpand={toggleExpand}
+            onCancel={cancel}
+            onRemoveFromQueue={removeFromQueue}
           />
         ))}
       </div>

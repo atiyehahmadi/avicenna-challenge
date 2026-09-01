@@ -36,6 +36,8 @@ export interface MessageRowProps {
   expanded: boolean;
   onToggleSelect: (id: string) => void;
   onToggleExpand: (id: string) => void;
+  onCancel: (id: string) => void;
+  onRemoveFromQueue: (id: string) => void;
 }
 
 export function MessageRow({
@@ -44,6 +46,8 @@ export function MessageRow({
   expanded,
   onToggleSelect,
   onToggleExpand,
+  onCancel,
+  onRemoveFromQueue,
 }: MessageRowProps) {
   const { id, subject, recipient, body, createdAt, status, queued, error } =
     message;
@@ -103,6 +107,33 @@ export function MessageRow({
             <span className={styles.errorText} title={error}>
               {error}
             </span>
+          )}
+        </span>
+
+        <span role="gridcell" className={styles.cellActions}>
+          {status === 'sending' && (
+            <button
+              type="button"
+              className={styles.action}
+              onClick={() => onCancel(id)}
+              aria-label={`Cancel sending: ${subject}`}
+            >
+              Cancel
+            </button>
+          )}
+          {/*
+            A queued row is not `sending`, so the brief's Cancel does not apply
+            to it. It gets its own label rather than overloading that one.
+          */}
+          {display === 'queued' && (
+            <button
+              type="button"
+              className={styles.action}
+              onClick={() => onRemoveFromQueue(id)}
+              aria-label={`Remove from queue: ${subject}`}
+            >
+              Remove
+            </button>
           )}
         </span>
       </div>
